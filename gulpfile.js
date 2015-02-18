@@ -8,6 +8,9 @@ var gutil = require('gulp-util');
 var del = require('del');
 var nib = require('nib');
 
+var browserSync = require('browser-sync');
+var reload = browserSync.reload;
+
 
 gulp.task('scripts', function() {
 	del(['./build/scripts/**/*.*']);
@@ -19,18 +22,20 @@ gulp.task('scripts', function() {
 		}))
 		.pipe(rename('main.js'))
 		.pipe(gulp.dest('./build/scripts/'))
+        .pipe(browserSync.reload({stream:true}));
 });
 
  
 gulp.task('styles', function () {
 	del(['./build/styles/**/*.*']);
 
-	return gulp.src('./src/styles/*.styl')
+	return gulp.src('./src/styles/**/*.styl')
 		.pipe(stylus({
 			use: nib(),
 			compress: true
 		}))
-		.pipe(gulp.dest('./build/styles/'));
+		.pipe(gulp.dest('./build/styles/'))
+        .pipe(browserSync.reload({stream:true}));
 });
 
 
@@ -44,16 +49,21 @@ gulp.task('copy', function () {
 
 gulp.task('watch', function() {
     gulp.watch('./src/scripts/**/*.coffee', ['scripts']);
-    gulp.watch('./src/styles/**/*.stylus', ['styles']);
+    gulp.watch('./src/styles/**/*.styl', ['styles']);
     gulp.watch('./gulpfile.js', ['default']);
 });
 
-//ToDo:
-//ImageMin
-//Copy Media
-//JS Concat
-//JS Minify
-//Bower
+gulp.task('browser-sync', ['default'], function() {
+    browserSync({
+        server: {
+            baseDir: "./build/"
+        }
+    });
+});
+
+gulp.task('serve', ['browser-sync'], function () {
+
+});
 
 gulp.task('default', ['scripts', 'styles', 'copy', 'watch'], function () {
 	var target = gulp.src('./build/index.html');
@@ -64,3 +74,10 @@ gulp.task('default', ['scripts', 'styles', 'copy', 'watch'], function () {
 	return target.pipe(inject(sources, {addRootSlash:false, ignorePath:'build'}))
 		.pipe(gulp.dest('./build'));
 });
+
+
+//ToDo:
+//ImageMin
+//Copy Media
+//JS Concat
+//JS Minify
