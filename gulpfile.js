@@ -1,3 +1,4 @@
+var debowerify = require('debowerify');
 var gulp = require('gulp');
 var browserify = require('gulp-browserify');
 var inject = require("gulp-inject");
@@ -13,8 +14,8 @@ gulp.task('scripts', function() {
 	
 	return gulp.src('src/scripts/main.coffee', { read: false })
 		.pipe(browserify({
-			transform: ['coffeeify'],
-			extensions: ['.coffee']
+			transform: ['coffeeify', 'debowerify'],
+			extensions: ['.coffee', '.js']
 		}))
 		.pipe(rename('main.js'))
 		.pipe(gulp.dest('./build/scripts/'))
@@ -44,6 +45,7 @@ gulp.task('copy', function () {
 gulp.task('watch', function() {
     gulp.watch('./src/scripts/**/*.coffee', ['scripts']);
     gulp.watch('./src/styles/**/*.stylus', ['styles']);
+    gulp.watch('./gulpfile.js', ['default']);
 });
 
 //ToDo:
