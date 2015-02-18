@@ -1,0 +1,20 @@
+{
+  "name": "gulp-coffee-stylus-boilerplate",
+  "version": "1.0.0",
+  "authors": [
+    "Danny Duong <danny.duong@trailerpark.com>"
+  ],
+  "description": "Boiler plate for gulp coffe stylus",
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "three.js": "*"
+  }
+}
