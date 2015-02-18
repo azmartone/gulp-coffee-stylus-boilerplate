@@ -1,8 +1,9 @@
 var gulp = require('gulp');
-var gutil = require('gulp-util');
-var stylus = require('gulp-stylus');
 var browserify = require('gulp-browserify');
+var inject = require("gulp-inject");
 var rename = require('gulp-rename');
+var stylus = require('gulp-stylus');
+var gutil = require('gulp-util');
 var nib = require('nib');
 
 
@@ -33,13 +34,35 @@ gulp.task('styles', function () {
     .pipe(gulp.dest('./build/styles'));
 });
 
+
+// gulp.task('copy', function () {
+//   gulp.src('./src/root/**/*.*')
+//     .pipe(gulp.dest('./build/'));
+
+//   var target = gulp.src('./build/index.html');
+//   // It's not necessary to read the files (will speed up things), we're only after their paths: 
+//   var sources = gulp.src(['./build/scripts/**/*.js', './build/styles/**/*.css'], {read: false});
+ 
+//   return target.pipe(inject(sources))
+//     .pipe(gulp.dest('./build'));
+// });
+
 gulp.task('copy', function () {
   gulp.src('./src/root/**/*.*')
     .pipe(gulp.dest('./build/'));
 });
 
+gulp.task('index', function () {
+  var target = gulp.src('./build/index.html');
+  // It's not necessary to read the files (will speed up things), we're only after their paths: 
+  var sources = gulp.src(['./build/scripts/**/*.js', './build/styles/**/*.css'], {read: false});
+ 
+  return target.pipe(inject(sources))
+    .pipe(gulp.dest('./build'));
+});
 
-gulp.task('default', ['scripts', 'styles', 'copy'], function() {
+
+gulp.task('default', ['scripts', 'styles', 'copy', 'index'], function() {
     // //a list of watchers, so it will watch all of the following files waiting for changes
     // gulp.watch('app/scripts/src/**', ['scripts']);
     // gulp.watch('app/styles/scss/**', ['styles']);
