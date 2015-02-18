@@ -11,6 +11,9 @@ var nib = require('nib');
 var browserSync = require('browser-sync');
 var reload = browserSync.reload;
 
+var imagemin = require('gulp-imagemin');
+var pngquant = require('imagemin-pngquant');
+
 
 gulp.task('scripts', function() {
 	del(['./build/scripts/**/*.*']);
@@ -42,8 +45,11 @@ gulp.task('styles', function () {
 gulp.task('copy', function () {
 	del(['./build/*.*']);
 
-	return gulp.src('./src/root/**/*.*')
+	gulp.src('./src/root/**/*.*')
 		.pipe(gulp.dest('./build/'));
+
+	gulp.src('./src/media/**/*.*')
+		.pipe(gulp.dest('./build/media'));
 });
 
 
@@ -77,7 +83,8 @@ gulp.task('default', ['scripts', 'styles', 'copy', 'watch'], function () {
 
 
 //ToDo:
+//Deploy Stuff
+//Config folder for deploy
 //ImageMin
-//Copy Media
 //JS Concat
 //JS Minify
