@@ -1,23 +1,21 @@
 var browserSync = require('browser-sync');
-var debowerify = require('debowerify');
-var gulp = require('gulp');
-var browserify = require('gulp-browserify');
-var inject = require("gulp-inject");
-var rename = require('gulp-rename');
-var stylus = require('gulp-stylus');
-var minifyCss = require('gulp-minify-css');
-var gutil = require('gulp-util');
-var imagemin = require('gulp-imagemin');
-var pngquant = require('imagemin-pngquant');
+var debowerify  = require('debowerify');
+var del         = require('del');
+var gulp        = require('gulp');
+var concat      = require('gulp-concat');
+var browserify  = require('gulp-browserify');
+var Filter      = require('gulp-filter');
+var imagemin    = require('gulp-imagemin');
+var inject      = require("gulp-inject");
+var minifyCSS   = require('gulp-minify-css');
+var rename      = require('gulp-rename');
+var sourcemaps  = require('gulp-sourcemaps');
+var stylus      = require('gulp-stylus');
+var gutil       = require('gulp-util');
+var uglify      = require('gulp-uglify');
+var pngquant    = require('imagemin-pngquant');
 var runSequence = require('run-sequence');
-var concat = require('gulp-concat');
-var Filter = require('gulp-filter');
-var minifyCSS = require('gulp-minify-css'); 
-var sourcemaps = require('gulp-sourcemaps');
-
-var del = require('del');
-var nib = require('nib');
-
+var nib         = require('nib');
 
 var reload = browserSync.reload;
 
@@ -34,12 +32,6 @@ var Config = {
 			styles:   'build/styles',
 			scripts:  'build/scripts',
 			media:    'build/media'
-		},
-		dist: {
-			root:     'dist',
-			styles:   'dist/styles',
-			scripts:  'dist/scripts',
-			media:    'dist/media'
 		}
 	}
 }
@@ -48,15 +40,29 @@ var Config = {
 
 gulp.task('scripts', function() {
 	del([ Config.paths.build.scripts + '/**/*.*' ]);
-	
-	return gulp.src( Config.paths.src.scripts + '/main.coffee', { read: false })
-		.pipe(browserify({
-			transform: ['coffeeify', 'debowerify'],
-			extensions: ['.coffee', '.js']
-		}))
-		.pipe(rename('main.js'))
-		.pipe(gulp.dest( Config.paths.build.scripts + '/' ))
-        .pipe(browserSync.reload({stream:true}));
+
+	if (Config.mode === 'build'){	
+		return gulp.src( Config.paths.src.scripts + '/main.coffee', { read: false })
+			.pipe(browserify({
+				debug: true,
+				transform: ['coffeeify', 'debowerify'],
+				extensions: ['.coffee', '.js']
+			}))
+			.pipe(rename('app.js'))
+			.pipe(gulp.dest( Config.paths.build.scripts + '/' ))
+			.pipe(browserSync.reload({stream:true}));
+
+	}else if (Config.mode === 'dist'){
+		return gulp.src( Config.paths.src.scripts + '/main.coffee', { read: false })
+			.pipe(browserify({
+					transform: ['coffeeify', 'debowerify'],
+					extensions: ['.coffee', '.js']
+				}))
+			.pipe(uglify())
+			.pipe(rename('app.js'))
+			.pipe(gulp.dest( Config.paths.build.scripts + '/' ))
+			.pipe(browserSync.reload({stream:true}));
+	}
 });
 
  
@@ -76,12 +82,12 @@ gulp.task('styles', function () {
 				Config.paths.src.styles + '/**/*.css'
 			])
 			.pipe(filter)
-		    .pipe(sourcemaps.init())
+			.pipe(sourcemaps.init())
 			.pipe(stylus({
 					use: nib(),
 					compress: false
 				}))
-		    .pipe(sourcemaps.write())
+			.pipe(sourcemaps.write())
 			.pipe(filter.restore())
 			.pipe(concat('app.css'))
 			.pipe(gulp.dest(Config.paths.build.styles + '/'))
@@ -141,24 +147,17 @@ gulp.task('index', function () {
 });
 
 gulp.task('watch', function() {
-    gulp.watch( Config.paths.src.scripts + '/**/*.coffee', ['scripts']);
-    gulp.watch( Config.paths.src.styles + '/**/*.styl', ['styles']);
-    gulp.watch('./gulpfile.js', ['default']);
+	gulp.watch( Config.paths.src.scripts + '/**/*.coffee', ['scripts']);
+	gulp.watch( Config.paths.src.styles + '/**/*.styl', ['styles']);
+	gulp.watch('./gulpfile.js', ['default']);
 });
 
 gulp.task('browser-sync', ['default'], function() {
-    browserSync({
-        server: {
-            baseDir:  Config.paths.build.root
-        }
-    });
-});
-
-
-/***** MAIN TASKS *****/
-
-gulp.task('serve', ['browser-sync'], function () {
-
+	browserSync({
+		server: {
+			baseDir:  Config.paths.build.root
+		}
+	});
 });
 
 gulp.task('inject', function () {
@@ -173,21 +172,19 @@ gulp.task('inject', function () {
 		.pipe(gulp.dest( Config.paths.build.root ));
 });
 
+/***** MAIN TASKS *****/
+
+gulp.task('serve', ['browser-sync'], function () {
+
+});
 
 // # Based on http://stefanimhoff.de/2014/gulp-tutorial-3-build-clean-jekyll/
-var devBuildTask = function() {
+var devBuildTask = function(mode) {
   return function(callback) {
-    Config.mode = 'build';
+    Config.mode = mode;
     return runSequence('clean', ['scripts', 'styles', 'index', 'media', 'watch'], 'inject', callback);
   };
 };
 
-var prodBuildTask = function() {
-  return function(callback) {
-    Config.mode = 'dist';
-    return runSequence('clean', ['scripts', 'styles', 'index', 'media', 'watch'], 'inject', callback);
-  };
-};
-
-gulp.task('default', devBuildTask());
-gulp.task('dist', prodBuildTask());
+gulp.task('default', devBuildTask('build'));
+gulp.task('dist', devBuildTask('dist'));
