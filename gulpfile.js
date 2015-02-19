@@ -5,10 +5,13 @@ var browserify = require('gulp-browserify');
 var inject = require("gulp-inject");
 var rename = require('gulp-rename');
 var stylus = require('gulp-stylus');
+var minifyCss = require('gulp-minify-css');
 var gutil = require('gulp-util');
 
 var imagemin = require('gulp-imagemin');
 var pngquant = require('imagemin-pngquant');
+
+var runSequence = require('run-sequence');
 
 var del = require('del');
 var nib = require('nib');
@@ -72,18 +75,22 @@ gulp.task('styles', function () {
 /***** MEDIA *****/
 
 gulp.task('media', function () {
-	gulp.src( Config.paths.src.media + '/**/*.*' )
-		.pipe(gulp.dest( Config.paths.build.media ));
-});
+	if (Config.mode === 'build'){
 
-gulp.task('media-deploy', function () {
-    return gulp.src( Config.paths.src.media + '/**/*.*')
-        .pipe(imagemin({
-            progressive: true,
-            svgoPlugins: [{removeViewBox: false}],
-            use: [pngquant()]
-        }))
-        .pipe(gulp.dest( Config.paths.build.media ));
+		return gulp.src( Config.paths.src.media + '/**/*.*' )
+			.pipe(gulp.dest( Config.paths.build.media ));
+
+	}else if (Config.mode === 'dist'){
+
+		return gulp.src( Config.paths.src.media + '/**/*.*')
+			.pipe(imagemin({
+				progressive: true,
+				svgoPlugins: [{removeViewBox: false}],
+				use: [pngquant()]
+			}))
+			.pipe(gulp.dest( Config.paths.build.media ));
+	
+	}
 });
 
 
@@ -120,7 +127,7 @@ gulp.task('serve', ['browser-sync'], function () {
 
 });
 
-gulp.task('default', ['scripts', 'styles', 'index', 'media', 'watch'], function () {
+gulp.task('inject', function () {
 	var target = gulp.src( Config.paths.build.root + '/index.html');
 
 	var sources = gulp.src([ 
@@ -133,11 +140,20 @@ gulp.task('default', ['scripts', 'styles', 'index', 'media', 'watch'], function 
 });
 
 
-gulp.task('deploy', ['clean', 'scripts', 'styles', 'index', 'media-deploy', 'watch'], function () {
-	//ToDo:
-	//Deploy Stuff
-	//Config folder for deploy
-	//ImageMin
-	//JS Concat
-	//JS Minify
-});
+// # Based on http://stefanimhoff.de/2014/gulp-tutorial-3-build-clean-jekyll/
+var devBuildTask = function() {
+  return function(callback) {
+    Config.mode = 'build';
+    return runSequence('clean', ['scripts', 'styles', 'index', 'media', 'watch'], 'inject', callback);
+  };
+};
+
+var prodBuildTask = function() {
+  return function(callback) {
+    Config.mode = 'dist';
+    return runSequence('clean', ['scripts', 'styles', 'index', 'media', 'watch'], 'inject', callback);
+  };
+};
+
+gulp.task('default', devBuildTask());
+gulp.task('dist', prodBuildTask());
