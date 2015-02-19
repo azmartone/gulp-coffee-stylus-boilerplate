@@ -31,7 +31,8 @@
     "gulp-watch": "^4.1.1",
     "imagemin-pngquant": "^4.0.0",
     "nib": "^1.1.0",
-    "run-sequence": "^1.0.2"
+    "run-sequence": "^1.0.2",
+    "vinyl-source-stream": "^1.0.0"
   },
   "browserify": {
     "transform": [
@@ -40,8 +41,5 @@
   },
   "browserify-shim": {
     "three": "global:THREE"
-  },
-  "dependencies": {
-    "vinyl-source-stream": "^1.0.0"
   }
 }
