@@ -7,11 +7,13 @@ var rename = require('gulp-rename');
 var stylus = require('gulp-stylus');
 var minifyCss = require('gulp-minify-css');
 var gutil = require('gulp-util');
-
 var imagemin = require('gulp-imagemin');
 var pngquant = require('imagemin-pngquant');
-
 var runSequence = require('run-sequence');
+var concat = require('gulp-concat');
+var Filter = require('gulp-filter');
+var minifyCSS = require('gulp-minify-css'); 
+var sourcemaps = require('gulp-sourcemaps');
 
 var del = require('del');
 var nib = require('nib');
@@ -61,15 +63,47 @@ gulp.task('scripts', function() {
 /***** STYLES *****/
 
 gulp.task('styles', function () {
+	var filter = Filter('**/*.styl');
+
 	del([ Config.paths.build.styles + '/**/*.*' ]);
 
-	return gulp.src( Config.paths.src.styles + '/**/*.styl' )
-		.pipe(stylus({
-			use: nib(),
-			compress: true
-		}))
-		.pipe(gulp.dest( Config.paths.build.styles + '/' ))
-		.pipe(browserSync.reload({stream:true}));
+
+// Inline sourcemaps 
+
+	if (Config.mode === 'build'){
+		return gulp.src([
+				Config.paths.src.styles + '/**/*.styl',
+				Config.paths.src.styles + '/**/*.css'
+			])
+			.pipe(filter)
+		    .pipe(sourcemaps.init())
+			.pipe(stylus({
+					use: nib(),
+					compress: false
+				}))
+		    .pipe(sourcemaps.write())
+			.pipe(filter.restore())
+			.pipe(concat('app.css'))
+			.pipe(gulp.dest(Config.paths.build.styles + '/'))
+			.pipe(browserSync.reload({stream:true}));
+
+	}else if (Config.mode === 'dist'){
+		return gulp.src([
+				Config.paths.src.styles + '/**/*.styl',
+				Config.paths.src.styles + '/**/*.css'
+			])
+			.pipe(filter)
+			.pipe(stylus({
+					use: nib(),
+					compress: true
+				}))
+			.pipe(filter.restore())
+			.pipe(concat('app.css'))
+			.pipe(minifyCSS())
+			.pipe(gulp.dest(Config.paths.build.styles + '/'))
+			.pipe(browserSync.reload({stream:true}));
+
+	}
 });
 
 /***** MEDIA *****/
